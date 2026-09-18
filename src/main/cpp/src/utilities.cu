@@ -28,8 +28,6 @@
 #include <cuda/functional>
 #include <cuda/stream>
 
-#include <climits>
-
 namespace spark_rapids_jni {
 
 bool is_basic_spark_numeric(cudf::data_type type)

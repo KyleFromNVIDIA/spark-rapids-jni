@@ -44,8 +44,9 @@ bool is_basic_spark_numeric(cudf::data_type type);
  *
  * @param input The array of input bitmask buffers.
  * @param stream CUDA stream used for device memory operations and kernel launches.
- * @param mr Device memory resource used to allocate the returned bloom filter's memory.
+ * @param mr Device memory resource used to allocate the returned buffer's memory.
  *
+ * @return A buffer containing the bitwise-or of all the input bitmasks.
  */
 std::unique_ptr<cuda::device_buffer<std::byte>> bitmask_bitwise_or(
   std::vector<cudf::device_span<cudf::bitmask_type const>> const& input,
