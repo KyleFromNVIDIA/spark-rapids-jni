@@ -64,7 +64,7 @@ std::unique_ptr<cuda::device_buffer<std::byte>> bitmask_bitwise_or(
 
   std::unique_ptr<cuda::device_buffer<std::byte>> out =
     std::make_unique<cuda::device_buffer<std::byte>>(
-      stream, mr, mask_size * sizeof(cudf::bitmask_type) cuda::no_init);
+      stream, mr, mask_size * sizeof(cudf::bitmask_type), cuda::no_init);
   thrust::transform(rmm::exec_policy_nosync(stream, cudf::get_current_device_resource_ref()),
                     thrust::make_counting_iterator(0),
                     thrust::make_counting_iterator(0) + mask_size,
