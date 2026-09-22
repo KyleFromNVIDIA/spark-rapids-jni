@@ -860,8 +860,12 @@ inline std::unique_ptr<cudf::column> build_repeated_scalar_column(
       {false, T{}},
       {values.data(), nullptr, context.runtime.error->data()},
       stream);
-    child_col = std::make_unique<cudf::column>(
-      field.output_type, total_count, values.release(), rmm::device_buffer{}, 0);
+    child_col =
+      std::make_unique<cudf::column>(field.output_type,
+                                     total_count,
+                                     values.release(),
+                                     cudf::create_null_mask(0, cudf::mask_state::UNALLOCATED),
+                                     0);
   }
 
   auto offsets_col = make_offsets_column(input.num_rows, std::move(work.offsets));
