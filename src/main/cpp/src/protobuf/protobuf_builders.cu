@@ -170,8 +170,12 @@ std::unique_ptr<cudf::column> drop_unknown_repeated_enum_values_impl(
   auto const scratch_mr = cudf::get_current_device_resource_ref();
   auto keep_values      = cudf::is_valid(child, stream, scratch_mr);
   auto keep_offsets     = std::make_unique<cudf::column>(input_view.offsets(), stream, scratch_mr);
-  auto keep_lists       = cudf::make_lists_column(
-    input_view.size(), std::move(keep_offsets), std::move(keep_values), 0, rmm::device_buffer{});
+  auto keep_lists =
+    cudf::make_lists_column(input_view.size(),
+                            std::move(keep_offsets),
+                            std::move(keep_values),
+                            0,
+                            cudf::create_null_mask(0, cudf::mask_state::UNALLOCATED));
   return cudf::lists::apply_retention_mask(
     input_view, cudf::lists_column_view{keep_lists->view()}, stream, mr);
 }
