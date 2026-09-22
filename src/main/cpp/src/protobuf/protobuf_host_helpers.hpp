@@ -186,7 +186,7 @@ inline std::unique_ptr<cudf::column> make_offsets_column(cudf::size_type num_row
   return std::make_unique<cudf::column>(cudf::data_type{cudf::type_id::INT32},
                                         num_rows + 1,
                                         offsets.release(),
-                                        rmm::device_buffer{},
+                                        cudf::create_null_mask(0, cudf::mask_state::UNALLOCATED),
                                         0);
 }
 
