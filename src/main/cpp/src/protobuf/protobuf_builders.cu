@@ -132,14 +132,12 @@ inline void validate_protobuf_decode_context(
   std::source_location const& location = std::source_location::current())
 {
   auto const caller = location.function_name();
-  CUDF_EXPECTS(context.row_force_null != nullptr,
-               std::string{caller} + ": row-force-null buffer must be non-null");
   CUDF_EXPECTS(context.error != nullptr, std::string{caller} + ": error buffer must be non-null");
   CUDF_EXPECTS(context.error->size() == 1,
                std::string{caller} + ": error buffer must contain exactly one element");
   CUDF_EXPECTS(
-    context.row_force_null->is_empty() || parent.top_row_indices != nullptr ||
-      context.row_force_null->size() == static_cast<size_t>(input.num_rows),
+    context.row_force_null.empty() || parent.top_row_indices != nullptr ||
+      context.row_force_null.size() == static_cast<size_t>(input.num_rows),
     std::string{caller} + ": row-force-null buffer must be empty, row-sized, or remapped");
 }
 
@@ -601,8 +599,9 @@ std::unique_ptr<cudf::column> build_merged_singular_struct_column(
     validation_fields.host.data(), static_cast<int>(validation_fields.host.size()), stream);
   auto d_field_lookup = cudf::detail::make_device_uvector_async(h_field_lookup, stream, scratch_mr);
 
-  auto invalid_rows =
-    cudf::detail::make_zeroed_device_uvector_async<bool>(input.num_rows, stream, scratch_mr);
+  auto invalid_rows_storage = make_zeroed_atomic_flag_buffer(input.num_rows, stream, scratch_mr);
+  auto const invalid_rows = cudf::device_span<bool>{static_cast<bool*>(invalid_rows_storage.data()),
+                                                    static_cast<std::size_t>(input.num_rows)};
   field_occurrence_location_provider fragment_locations{input, parent, work.occurrences.data()};
   launch_validate_message_fragments(
     fragment_locations,
@@ -612,7 +611,7 @@ std::unique_ptr<cudf::column> build_merged_singular_struct_column(
       static_cast<int>(d_field_lookup.size())}},
     work.total_count,
     invalid_rows.data(),
-    context.runtime.row_force_null->is_empty() ? nullptr : context.runtime.row_force_null->data(),
+    context.runtime.row_force_null.empty() ? nullptr : context.runtime.row_force_null.data(),
     context.runtime.error->data(),
     depth + 1,
     stream);
@@ -787,7 +786,7 @@ std::unique_ptr<cudf::column> build_nested_struct_column(
                                   .direct      = nullptr,
                                   .direct_size = 0}},
     decode_ctx.error->data(),
-    !decode_ctx.row_force_null->is_empty() ? decode_ctx.row_force_null->data() : nullptr,
+    !decode_ctx.row_force_null.empty() ? decode_ctx.row_force_null.data() : nullptr,
     depth + 1,
     stream);
 
