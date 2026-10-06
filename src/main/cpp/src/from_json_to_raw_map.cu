@@ -204,8 +204,8 @@ std::tuple<cuda::device_buffer<uint8_t>, char, std::unique_ptr<cudf::column>> un
                                 cudaMemcpyDefault,
                                 stream.get()));
   cudf::detail::cuda_memcpy_async(
-    cudf::device_span<char>(static_cast<char*>(unified_buff.data()) + concatenated_buff->size(),
-                            1u),
+    cudf::device_span<char>(
+      reinterpret_cast<char*>(unified_buff.data()) + concatenated_buff->size(), 1u),
     cudf::host_span<char const>(&delimiter, 1, false),
     stream);
 
