@@ -469,8 +469,8 @@ rmm::device_uvector<node_kind> check_key_or_value_nodes(
 struct tokenized_input {
   cudf::io::datasource::owning_buffer<rmm::device_buffer> concat_buff_wrapper;
   cudf::device_span<char const> preprocessed_input;
-  rmm::device_uvector<PdaTokenT> tokens;
-  rmm::device_uvector<SymbolOffsetT> token_positions;
+  cuda::device_buffer<PdaTokenT> tokens;
+  cuda::device_buffer<SymbolOffsetT> token_positions;
   std::unique_ptr<cudf::column> should_be_nullified;
   cudf::size_type num_nodes;
   rmm::device_uvector<NodeIndexT> node_token_ids;
