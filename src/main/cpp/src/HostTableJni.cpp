@@ -64,7 +64,9 @@ std::size_t column_size(cudf::column_view const& c, cudaStream_t stream)
 {
   std::size_t size = 0;
   if (c.data<uint8_t>() != nullptr) { size += pad_size(get_data_size(c, stream)); }
-  if (c.has_nulls()) { size += cudf::bitmask_allocation_size_bytes(c.size()); }
+  if (c.has_nulls()) {
+    size += cudf::bitmask_allocation_size_words(c.size()) * sizeof(cudf::bitmask_type);
+  }
   return std::accumulate(c.child_begin(),
                          c.child_end(),
                          size,
@@ -111,8 +113,9 @@ uint8_t* build_host_column_view_async(cudf::column_view const& dev_col,
   cudf::bitmask_type const* host_null_mask = nullptr;
   if (dev_col.has_nulls()) {
     host_null_mask = std::bit_cast<cudf::bitmask_type const*>(bp);
-    auto mask_size = cudf::bitmask_allocation_size_bytes(dev_col.size());
-    bp             = copy_to_host_async(dev_col.null_mask(), bp, mask_size, bp_end, stream);
+    auto mask_size =
+      cudf::bitmask_allocation_size_words(dev_col.size()) * sizeof(cudf::bitmask_type);
+    bp = copy_to_host_async(dev_col.null_mask(), bp, mask_size, bp_end, stream);
   }
   std::vector<host_column_view> children;
   children.reserve(dev_col.num_children());
